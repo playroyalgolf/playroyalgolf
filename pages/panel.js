@@ -109,6 +109,12 @@ export default function Panel() {
   const incoming = matches.filter((m) => m.opponent_id === me.id && m.status === 'pending');
   const outgoing = matches.filter((m) => m.challenger_id === me.id && m.status === 'pending');
   const active = matches.filter((m) => m.status === 'scheduled');
+  const awaitingMyConfirmation = matches.filter(
+    (m) => m.status === 'awaiting_confirmation' && m.proposed_by_id !== me.id
+  );
+  const awaitingTheirConfirmation = matches.filter(
+    (m) => m.status === 'awaiting_confirmation' && m.proposed_by_id === me.id
+  );
   const history = matches.filter((m) =>
     ['completed', 'rejected', 'forfeit_no_response', 'forfeit_no_show'].includes(m.status)
   );
@@ -132,7 +138,7 @@ export default function Panel() {
       p.is_approved &&
       !matches.some(
         (m) =>
-          ['pending', 'scheduled'].includes(m.status) &&
+          ['pending', 'scheduled', 'awaiting_confirmation'].includes(m.status) &&
           (m.challenger_id === p.id || m.opponent_id === p.id) &&
           (m.challenger_id === me.id || m.opponent_id === me.id)
       )
@@ -237,6 +243,57 @@ export default function Panel() {
         </div>
       )}
 
+      {awaitingMyConfirmation.length > 0 && (
+        <div className="mb-7">
+          <h3 className="font-display text-lg mb-2 text-fairway">Onayınızı Bekleyen Sonuçlar</h3>
+          <div className="space-y-2">
+            {awaitingMyConfirmation.map((m) => {
+              const opponentId = m.challenger_id === me.id ? m.opponent_id : m.challenger_id;
+              const winnerName = nameById(m.proposed_winner_id);
+              return (
+                <div key={m.id} className="border border-line rounded-xl p-3">
+                  <div className="text-sm mb-2">
+                    <span className="font-semibold">{nameById(opponentId)}</span>
+                    {' '}sonucu bildirdi: <span className="text-flag font-semibold">{winnerName} kazandı</span>
+                    {m.result_note && <span className="text-inkSoft"> — {m.result_note}</span>}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => call('/api/matches/confirm-result', { matchId: m.id })}
+                      className="bg-fairway text-cream rounded-full px-3 py-1.5 text-xs font-semibold"
+                    >
+                      Onayla
+                    </button>
+                    <button
+                      onClick={() => call('/api/matches/dispute-result', { matchId: m.id })}
+                      className="border border-flag text-flag rounded-full px-3 py-1.5 text-xs font-semibold"
+                    >
+                      İtiraz Et
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {awaitingTheirConfirmation.length > 0 && (
+        <div className="mb-7">
+          <h3 className="font-display text-lg mb-2 text-fairway">Rakibin Onayını Bekleyen Sonuçlar</h3>
+          <div className="space-y-2">
+            {awaitingTheirConfirmation.map((m) => {
+              const opponentId = m.challenger_id === me.id ? m.opponent_id : m.challenger_id;
+              return (
+                <div key={m.id} className="border border-line rounded-xl p-3 text-sm">
+                  {nameById(opponentId)} — <span className="text-inkSoft">{nameById(m.proposed_winner_id)} kazandı bildirdiniz, onay bekleniyor</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {active.length > 0 && (
         <div className="mb-7">
           <h3 className="font-display text-lg mb-2 text-fairway">Devam Eden Maçlar</h3>
@@ -310,7 +367,7 @@ function ActiveMatchCard({ match, me, nameById, fmt, call }) {
           onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: me.id })}
           className="bg-flag text-white rounded-full px-3 py-1.5 text-xs font-semibold"
         >
-          Ben kazandım
+          Ben kazandım (rakibin onayı gerekir)
         </button>
         <button
           onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: opponentId })}

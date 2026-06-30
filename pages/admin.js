@@ -170,28 +170,7 @@ export default function Admin() {
         ) : (
           <div className="space-y-2">
             {approved.map((p) => (
-              <div key={p.id} className="border border-line rounded-xl p-3 flex justify-between items-center flex-wrap gap-2">
-                <div className="text-sm">
-                  <span className="font-semibold">{p.full_name}</span>
-                  <span className="text-inkSoft"> — {p.club || 'kulüp belirtilmemiş'} · {p.total_points} puan</span>
-                  {p.is_coordinator && (
-                    <span className="ml-2 text-[10px] bg-gold text-white px-2 py-0.5 rounded-full">koordinatör</span>
-                  )}
-                </div>
-                {!p.is_coordinator && (
-                  <button
-                    onClick={() => {
-                      if (confirm(`${p.full_name} ligden tamamen çıkarılsın mı? Bu oyuncunun tüm maç kayıtları da silinecek.`)) {
-                        call('/api/admin/remove-player', { playerId: p.id });
-                      }
-                    }}
-                    disabled={busy}
-                    className="border border-flag text-flag rounded-full px-3 py-1.5 text-xs font-semibold"
-                  >
-                    Ligden Çıkar
-                  </button>
-                )}
-              </div>
+              <PlayerRow key={p.id} player={p} busy={busy} call={call} />
             ))}
           </div>
         )}
@@ -225,5 +204,66 @@ export default function Admin() {
       )}
 
     </Layout>
+  );
+}
+
+function PlayerRow({ player, busy, call }) {
+  const [editing, setEditing] = useState(false);
+  const [points, setPoints] = useState(player.total_points);
+
+  return (
+    <div className="border border-line rounded-xl p-3">
+      <div className="flex justify-between items-center flex-wrap gap-2">
+        <div className="text-sm">
+          <span className="font-semibold">{player.full_name}</span>
+          <span className="text-inkSoft"> — {player.club || 'kulüp belirtilmemiş'} · {player.total_points} puan</span>
+          {player.is_coordinator && (
+            <span className="ml-2 text-[10px] bg-gold text-white px-2 py-0.5 rounded-full">koordinatör</span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setEditing(!editing)}
+            disabled={busy}
+            className="border border-fairway text-fairway rounded-full px-3 py-1.5 text-xs font-semibold"
+          >
+            Puanı Düzelt
+          </button>
+          {!player.is_coordinator && (
+            <button
+              onClick={() => {
+                if (confirm(`${player.full_name} ligden tamamen çıkarılsın mı? Bu oyuncunun tüm maç kayıtları da silinecek.`)) {
+                  call('/api/admin/remove-player', { playerId: player.id });
+                }
+              }}
+              disabled={busy}
+              className="border border-flag text-flag rounded-full px-3 py-1.5 text-xs font-semibold"
+            >
+              Ligden Çıkar
+            </button>
+          )}
+        </div>
+      </div>
+      {editing && (
+        <div className="flex gap-2 items-center mt-3 pt-3 border-t border-line">
+          <input
+            type="number"
+            className="border border-line rounded-lg px-2 py-1.5 text-sm w-24"
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
+          />
+          <button
+            onClick={async () => {
+              const ok = await call('/api/admin/adjust-points', { playerId: player.id, totalPoints: points });
+              if (ok) setEditing(false);
+            }}
+            disabled={busy}
+            className="bg-fairway text-cream rounded-full px-3 py-1.5 text-xs font-semibold"
+          >
+            Kaydet
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

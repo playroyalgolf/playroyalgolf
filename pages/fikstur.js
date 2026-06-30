@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 const STATUS_LABEL = {
   pending: 'Cevap bekleniyor',
   scheduled: 'Planlandı',
+  awaiting_confirmation: 'Sonuç onayı bekleniyor',
   completed: 'Oynandı',
   rejected: 'Reddedildi',
   forfeit_no_response: 'Hükmen (cevapsız)',
@@ -14,6 +15,7 @@ const STATUS_LABEL = {
 const STATUS_STYLE = {
   pending: 'bg-tan text-[#7A5A12]',
   scheduled: 'bg-[#E4EFE3] text-fairway',
+  awaiting_confirmation: 'bg-tan text-[#7A5A12]',
   completed: 'bg-[#E4EFE3] text-fairway',
   rejected: 'bg-[#F8E2DD] text-flag',
   forfeit_no_response: 'bg-[#F8E2DD] text-flag',

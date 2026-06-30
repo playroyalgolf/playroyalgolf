@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from '../../../lib/supabaseAdmin';
-import { rankPlayers, tierPowerForRank } from '../../../lib/points';
+import { rankPlayers, tierForTotalPoints } from '../../../lib/points';
 import { runMaintenanceTasks } from '../../../lib/maintenance';
 
 export default async function handler(req, res) {
@@ -14,11 +14,10 @@ export default async function handler(req, res) {
   if (error) return res.status(500).json({ error: error.message });
 
   const ranked = rankPlayers(players || []);
-  const total = ranked.length;
   const weekStart = new Date().toISOString().slice(0, 10);
 
   for (const p of ranked) {
-    const tierPower = tierPowerForRank(p.rank, total);
+    const tierPower = tierForTotalPoints(p.total_points);
     await admin
       .from('players')
       .update({ locked_points: tierPower, locked_rank: p.rank })

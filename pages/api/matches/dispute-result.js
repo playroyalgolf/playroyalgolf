@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   const me = await getPlayerFromRequest(req);
   if (!me) return res.status(401).json({ error: 'Giriş yapmalısınız.' });
 
-  const { matchId, winnerId, note } = req.body || {};
-  if (!matchId || !winnerId) return res.status(400).json({ error: 'Kazanan seçilmedi.' });
+  const { matchId } = req.body || {};
+  if (!matchId) return res.status(400).json({ error: 'Maç belirtilmedi.' });
 
   const admin = getSupabaseAdmin();
   const { data: match, error } = await admin.from('matches').select('*').eq('id', matchId).single();
@@ -16,20 +16,20 @@ export default async function handler(req, res) {
   if (match.challenger_id !== me.id && match.opponent_id !== me.id) {
     return res.status(403).json({ error: 'Bu maça erişiminiz yok.' });
   }
-  if (match.status !== 'scheduled') {
-    return res.status(400).json({ error: 'Bu maç için sonuç bildirilemez.' });
+  if (match.status !== 'awaiting_confirmation') {
+    return res.status(400).json({ error: 'İtiraz edilecek bir sonuç yok.' });
   }
-  if (![match.challenger_id, match.opponent_id].includes(winnerId)) {
-    return res.status(400).json({ error: 'Geçersiz kazanan.' });
+  if (match.proposed_by_id === me.id) {
+    return res.status(400).json({ error: 'Kendi bildirdiğiniz sonuca itiraz edemezsiniz.' });
   }
 
   const { error: updateErr } = await admin
     .from('matches')
     .update({
-      status: 'awaiting_confirmation',
-      proposed_winner_id: winnerId,
-      proposed_by_id: me.id,
-      result_note: note || null,
+      status: 'scheduled',
+      proposed_winner_id: null,
+      proposed_by_id: null,
+      result_note: null,
     })
     .eq('id', matchId);
 
