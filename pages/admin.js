@@ -8,18 +8,21 @@ export default function Admin() {
   const [token, setToken] = useState(null);
   const [me, setMe] = useState(null);
   const [pending, setPending] = useState([]);
+  const [approved, setApproved] = useState([]);
   const [config, setConfig] = useState(null);
   const [archives, setArchives] = useState([]);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
 
   const loadAll = useCallback(async () => {
-    const [{ data: pend }, { data: cfg }, { data: arch }] = await Promise.all([
+    const [{ data: pend }, { data: appr }, { data: cfg }, { data: arch }] = await Promise.all([
       supabase.from('players').select('*').eq('is_approved', false).order('created_at'),
+      supabase.from('players').select('*').eq('is_approved', true).order('full_name'),
       supabase.from('league_config').select('*').eq('id', 1).single(),
       supabase.from('season_archives').select('*').order('season_number', { ascending: false }),
     ]);
     setPending(pend || []);
+    setApproved(appr || []);
     setConfig(cfg);
     setArchives(arch || []);
   }, []);
@@ -157,6 +160,69 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      <div className="mb-8">
+        <h3 className="font-display text-lg mb-2 text-fairway">
+          Lig Oyuncuları {approved.length > 0 && `(${approved.length})`}
+        </h3>
+        {approved.length === 0 ? (
+          <div className="text-inkSoft text-sm">Henüz onaylanmış oyuncu yok.</div>
+        ) : (
+          <div className="space-y-2">
+            {approved.map((p) => (
+              <div key={p.id} className="border border-line rounded-xl p-3 flex justify-between items-center flex-wrap gap-2">
+                <div className="text-sm">
+                  <span className="font-semibold">{p.full_name}</span>
+                  <span className="text-inkSoft"> — {p.club || 'kulüp belirtilmemiş'} · {p.total_points} puan</span>
+                  {p.is_coordinator && (
+                    <span className="ml-2 text-[10px] bg-gold text-white px-2 py-0.5 rounded-full">koordinatör</span>
+                  )}
+                </div>
+                {!p.is_coordinator && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`${p.full_name} ligden tamamen çıkarılsın mı? Bu oyuncunun tüm maç kayıtları da silinecek.`)) {
+                        call('/api/admin/remove-player', { playerId: p.id });
+                      }
+                    }}
+                    disabled={busy}
+                    className="border border-flag text-flag rounded-full px-3 py-1.5 text-xs font-semibold"
+                  >
+                    Ligden Çıkar
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {archives.length > 0 && (
+        <div>
+          <h3 className="font-display text-lg mb-2 text-fairway">Arşivlenmiş Sezonlar</h3>
+          <div className="space-y-2">
+            {archives.map((a) => (
+              <div key={a.id} className="border border-line rounded-xl p-3 flex justify-between items-center flex-wrap gap-2">
+                <div className="text-sm">
+                  Sezon {a.season_number} — {new Date(a.ended_at).toLocaleDateString('tr-TR')} ·{' '}
+                  <span className="text-inkSoft">{a.standings.length} oyuncu</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Bu sezon arşivi kalıcı olarak silinsin mi? Bu işlem geri alınamaz.')) {
+                      call('/api/admin/delete-archive', { archiveId: a.id });
+                    }
+                  }}
+                  disabled={busy}
+                  className="border border-flag text-flag rounded-full px-3 py-1.5 text-xs font-semibold"
+                >
+                  Arşivi Sil
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </Layout>
   );
