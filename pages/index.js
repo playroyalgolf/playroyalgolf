@@ -85,7 +85,8 @@ export default function Home() {
               <tr className="text-[11px] uppercase tracking-wide text-inkSoft border-b border-line">
                 <th className="text-left py-2 px-2"></th>
                 <th className="text-left py-2 px-2">Oyuncu</th>
-                <th className="text-center py-2 px-2">Puan</th>
+                <th className="text-center py-2 px-2">Toplam Puan</th>
+                <th className="text-center py-2 px-2">Piramit Puanı</th>
                 <th className="text-center py-2 px-2">O</th>
                 <th className="text-center py-2 px-2">G</th>
                 <th className="text-center py-2 px-2">M</th>
@@ -107,6 +108,9 @@ export default function Home() {
                   </td>
                   <td className="text-center font-mono font-semibold text-fairway py-2.5 px-2">
                     {Number(r.total_points).toFixed(0)}
+                  </td>
+                  <td className="text-center font-mono py-2.5 px-2">
+                    {Number(r.locked_points).toFixed(0)}
                   </td>
                   <td className="text-center font-mono py-2.5 px-2">{r.played}</td>
                   <td className="text-center font-mono py-2.5 px-2">{r.won}</td>
