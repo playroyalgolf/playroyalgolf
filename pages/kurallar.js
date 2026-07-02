@@ -28,7 +28,7 @@ export default function Kurallar() {
       <Section title="Averaj">
         <p>Her maçın sonunda hole farkı averaja yansır. Galip oyuncunun averajına <strong>+</strong> eklenir, mağlup oyuncunun averajına <strong>−</strong> eklenir.</p>
         <p>Örnek: 3&amp;2 sonuçlu maçta galip +3, mağlup −3 averaj alır.</p>
-        <p>Averaj, eşit puanlı oyuncular arasında sıralamayı belirlemez; bilgi amaçlıdır.</p>
+        <p>Eşit puanlı oyuncular arasında sıralamayı <strong>averaj</strong> belirler — averajı yüksek olan üstte yer alır.</p>
       </Section>
 
       <Section title="Sonuç Onayı">
