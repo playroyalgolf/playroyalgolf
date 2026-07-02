@@ -101,7 +101,12 @@ export default function Home() {
                     <td className={`text-center font-mono font-semibold py-2.5 px-2 ${av > 0 ? 'text-fairway' : av < 0 ? 'text-flag' : 'text-inkSoft'}`}>
                       {av > 0 ? `+${av}` : av}
                     </td>
-                    <td className="text-center font-mono py-2.5 px-2">{r.handicap ?? '—'}</td>
+                    <td className={`text-center font-mono py-2.5 px-2 font-semibold ${
+                      r.handicap_trend === 'down' ? 'text-fairway' :
+                      r.handicap_trend === 'up' ? 'text-flag' : 'text-ink'
+                    }`}>
+                      {r.handicap ?? '—'}
+                    </td>
                   </tr>
                 );
               })}

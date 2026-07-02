@@ -14,6 +14,17 @@ export default async function handler(req, res) {
 
   const newSeasonNumber = config.season_number + 1;
 
+  // Yeni sezon numarasını arşivdeki boşluklara göre hesapla
+  // Örn: arşivde [1,2,4] varsa (3 silindi) yeni sezon 3 olur
+  const { data: archives } = await admin.from('season_archives').select('season_number');
+  const existingNums = new Set((archives || []).map((a) => a.season_number));
+  let nextSeasonNum = 1;
+  while (existingNums.has(nextSeasonNum)) nextSeasonNum++;
+
+  // Tüm maç kayıtlarını temizle
+  await admin.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+  // Oyuncu istatistiklerini sıfırla (HCP korunur)
   const { error: resetErr } = await admin
     .from('players')
     .update({ total_points: 0, locked_points: 0, locked_rank: null, averaj: 0 })
@@ -22,9 +33,9 @@ export default async function handler(req, res) {
 
   const { error: configErr } = await admin
     .from('league_config')
-    .update({ season_active: true, season_number: newSeasonNumber, last_weekly_update: null })
+    .update({ season_active: true, season_number: nextSeasonNum, last_weekly_update: null })
     .eq('id', 1);
   if (configErr) return res.status(500).json({ error: configErr.message });
 
-  return res.status(200).json({ ok: true, seasonNumber: newSeasonNumber });
+  return res.status(200).json({ ok: true, seasonNumber: nextSeasonNum });
 }

@@ -1,12 +1,6 @@
 // Bu script GitHub Actions üzerinde Pazartesi 10:00'da otomatik çalışır.
-// Federasyonun handikap arama sayfasını gerçek bir tarayıcı gibi açar (Puppeteer),
-// her oyuncunun adını arar ve bulduğu HCP değerini Supabase'e yazar.
-//
-// NOT: Federasyon sayfasının arama formu basit bir URL parametresi kabul etmiyor
-// (JS ile çalışıyor), bu yüzden gerçek bir tarayıcı motoru kullanıyoruz.
-// İlk çalıştırmada beklenmedik bir form yapısıyla karşılaşılırsa, bu script
-// GitHub Actions loglarına ayrıntılı bilgi yazar - log çıktısını paylaşırsanız
-// script birlikte güncelleriz.
+// Federasyonun handikap sayfasını Puppeteer ile tarar, her oyuncunun HCP'sini
+// günceller ve bir önceki değere göre trend belirler (up/down/same).
 
 const puppeteer = require('puppeteer');
 const { createClient } = require('@supabase/supabase-js');
@@ -17,20 +11,15 @@ const HANDICAP_URL =
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 function normalize(str) {
-  return (str || '')
-    .toLocaleLowerCase('tr-TR')
-    .replace(/[İI]/g, 'i')
-    .trim();
+  return (str || '').toLocaleLowerCase('tr-TR').replace(/[İI]/g, 'i').trim();
 }
 
 async function searchPlayer(page, fullName) {
   await page.goto(HANDICAP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
 
-  // Sayfadaki ilk metin kutusunu "İsim" arama alanı olarak kullanıyoruz
-  // (sayfa düzeninde İsim, Federasyon No, Kulüp sırasıyla geliyor).
   const textInputs = await page.$$('input[type=text], input:not([type])');
   if (textInputs.length === 0) {
-    console.log(`[UYARI] "${fullName}" için arama kutusu bulunamadı, sayfa yapısı değişmiş olabilir.`);
+    console.log(`[UYARI] "${fullName}" için arama kutusu bulunamadı.`);
     return null;
   }
 
@@ -44,8 +33,7 @@ async function searchPlayer(page, fullName) {
   ]);
 
   const rows = await page.evaluate(() => {
-    const cells = Array.from(document.querySelectorAll('table tr'));
-    return cells.map((row) =>
+    return Array.from(document.querySelectorAll('table tr')).map((row) =>
       Array.from(row.querySelectorAll('td')).map((td) => td.innerText.trim())
     );
   });
@@ -55,8 +43,7 @@ async function searchPlayer(page, fullName) {
     if (row.length < 4) continue;
     const rowName = normalize(row[1]);
     if (rowName && (rowName.includes(targetNorm) || targetNorm.includes(rowName))) {
-      const hcpText = row[3];
-      const hcpValue = parseFloat((hcpText || '').replace(',', '.'));
+      const hcpValue = parseFloat((row[3] || '').replace(',', '.'));
       if (!Number.isNaN(hcpValue)) return hcpValue;
     }
   }
@@ -65,7 +52,7 @@ async function searchPlayer(page, fullName) {
 }
 
 async function main() {
-  const { data: players, error } = await supabase.from('players').select('id, full_name');
+  const { data: players, error } = await supabase.from('players').select('id, full_name, handicap');
   if (error) {
     console.error('Oyuncular alınamadı:', error.message);
     process.exit(1);
@@ -80,13 +67,23 @@ async function main() {
   let updated = 0;
   for (const player of players) {
     try {
-      const hcp = await searchPlayer(page, player.full_name);
-      if (hcp !== null) {
+      const newHcp = await searchPlayer(page, player.full_name);
+      if (newHcp !== null) {
+        const oldHcp = player.handicap !== null && player.handicap !== undefined
+          ? Number(player.handicap)
+          : null;
+
+        let trend = 'same';
+        if (oldHcp === null) trend = 'same';
+        else if (newHcp < oldHcp) trend = 'down';   // düştü = iyileşti = yeşil
+        else if (newHcp > oldHcp) trend = 'up';     // arttı = kötüleşti = kırmızı
+
         await supabase
           .from('players')
-          .update({ handicap: hcp, handicap_updated_at: new Date().toISOString() })
+          .update({ handicap: newHcp, handicap_trend: trend, handicap_updated_at: new Date().toISOString() })
           .eq('id', player.id);
-        console.log(`[OK] ${player.full_name}: HCP ${hcp}`);
+
+        console.log(`[OK] ${player.full_name}: HCP ${oldHcp ?? '?'} → ${newHcp} (${trend})`);
         updated++;
       }
     } catch (err) {
