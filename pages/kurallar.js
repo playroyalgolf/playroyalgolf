@@ -14,30 +14,34 @@ export default function Kurallar() {
     <Layout>
       <h2 className="font-display text-2xl mb-5">Lig Kuralları</h2>
 
-      <Section title="Puanlama">
-        <p>Kazandığınız maç için rakibinizin piramitteki güç puanı kadar puan kazanırsınız. Kazanılan puan toplam puanınıza eklenir.</p>
-        <p>Toplam puana göre en çok puan alan oyuncu piramitte en yukarıda olacak şekilde sıralanır.</p>
-        <p>Kaybeden oyuncu sabit 5 puan alır.</p>
-        <p>Maça gelmeme durumunda kazanan oyuncu gelmeyen oyuncunun güç puanını alır; gelmeyen oyuncu puan almaz.</p>
+      <Section title="Oyun Formatı">
+        <p>Tüm maçlar <strong>match play</strong> formatında oynanır. Beraberlik yoktur, her maçın mutlaka bir galibi olmalıdır.</p>
+        <p>Maç sonucu hole farkıyla ifade edilir: örneğin <strong>3&amp;2</strong> (3 fark, 2 hole kala), <strong>1 up</strong> (18. hole sonunda 1 fark) gibi.</p>
       </Section>
 
-      <Section title="Haftalık Güncelleme">
-        <p>Piramit sıralaması her hafta Pazartesi 10:00&apos;da güncellenir. Oyuncunun güç puanı, o haftaki sıralamaya göre belirlenir ve hafta boyunca geçerlidir.</p>
-        <p>Hafta içi alınan puanlar toplam puana eklenir; yeni sıralama bir sonraki Pazartesi 10:00&apos;da oluşur.</p>
+      <Section title="Puanlama">
+        <p><strong>Galip oyuncu</strong> sabit <strong>15 puan</strong> kazanır.</p>
+        <p><strong>Mağlup oyuncu</strong> sabit <strong>5 puan</strong> kazanır.</p>
+        <p>Maça gelmeyen oyuncu puan almaz; kazanan oyuncu 15 puan kazanır.</p>
+      </Section>
+
+      <Section title="Averaj">
+        <p>Her maçın sonunda hole farkı averaja yansır. Galip oyuncunun averajına <strong>+</strong> eklenir, mağlup oyuncunun averajına <strong>−</strong> eklenir.</p>
+        <p>Örnek: 3&amp;2 sonuçlu maçta galip +3, mağlup −3 averaj alır.</p>
+        <p>Averaj, eşit puanlı oyuncular arasında sıralamayı belirlemez; bilgi amaçlıdır.</p>
+      </Section>
+
+      <Section title="Sonuç Onayı">
+        <p>Maç bittikten sonra oyunculardan biri skoru sisteme girer ve kazananı bildirir. Rakip oyuncu bildirilen sonucu <strong>onaylar</strong>. İki tarafın onayı olmadan sonuç resmi olmaz ve puanlar verilmez.</p>
+        <p>Sonuca itiraz edilmesi durumunda maç tekrar planlandı durumuna döner ve koordinatöre bildirilmesi gerekir.</p>
       </Section>
 
       <Section title="Maç Teklifi">
-        <p>Oyuncular, güncel piramit sıralamasına göre maç teklif eder. Teklif alan oyuncu müsaitlik durumuna göre kabul eder; maçın saatine karşılıklı karar verirler.</p>
-        <p>Teklif edilen oyuncu 3 gün içinde cevap vermezse lig koordinatörüne haber verilir. Koordinatöre de cevap verilmezse teklif edilen oyuncu hükmen mağlup sayılır.</p>
+        <p>Oyuncular, güncel puan durumuna göre istedikleri rakibe maç teklif edebilir. Teklif ederken maç tarihi ve saatini de belirlemesi gerekir.</p>
+        <p>Teklif alan oyuncu müsaitlik durumuna göre kabul veya red edebilir.</p>
+        <p>Teklif edilen oyuncu 3 gün içinde cevap vermezse lig koordinatörüne bildirilmesi gerekir. Koordinatöre de cevap verilmezse teklif edilen oyuncu hükmen mağlup sayılır.</p>
         <p>Maç yeniden planlanacaksa rakibe en az 24 saat önceden bildirilmelidir.</p>
         <p>Tarihi belirlenen maçlar 1 hafta içinde oynanmalıdır.</p>
-      </Section>
-
-      <Section title="Öncelik Kuralları">
-        <p>Maç teklifinde öncelik daima sıralamada alttan gelen teklife aittir.</p>
-        <p>Bir oyuncunun kendi teklifi varken aynı zamanda ona da bir teklif gelmişse, öncelikle kendisine gelen teklifle oynamak zorundadır (örnek: 7. sıradaki kişi 5. sıradakine teklif etmiş, kendisine de 9. sıradaki teklif etmişse önce 9. sıradakiyle oynamalıdır). Bu zorunluluk bir maç için geçerlidir.</p>
-        <p>Alttan gelen teklifle oynandıktan sonra, üstten teklif edilen oyuncuyla da oynanabilir; o maçtan sonra alttan gelen teklifle oynama zorunluluğu yeniden devreye girer.</p>
-        <p>Hem teklif eden hem de teklif edilenin önceliği varsa, öncelik sıralamada alttaki oyuncunundur.</p>
       </Section>
 
       <Section title="İzin / Müsaitlik">
@@ -46,7 +50,7 @@ export default function Kurallar() {
       </Section>
 
       <Section title="Handikaplar">
-        <p>Oyuncuların güncel handikapları Türkiye Golf Federasyonu kayıtlarından her Pazartesi 10:00&apos;da otomatik olarak çekilip güncellenir. Bu, piramit puanlamasından bağımsız, oyuncular arası diğer mücadeleler için referans amaçlıdır.</p>
+        <p>Oyuncuların güncel handikapları Türkiye Golf Federasyonu kayıtlarından her Pazartesi 10:00&apos;da otomatik olarak güncellenir. Handikaplar bilgi amaçlıdır; lig puanlamasını etkilemez.</p>
       </Section>
     </Layout>
   );

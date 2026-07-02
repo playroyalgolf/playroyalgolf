@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   if (!coordinator) return res.status(403).json({ error: 'Bu işlem için koordinatör yetkisi gerekiyor.' });
 
   const admin = getSupabaseAdmin();
-
   const { data: config } = await admin.from('league_config').select('*').eq('id', 1).single();
   if (!config || config.season_active) {
     return res.status(400).json({ error: 'Önce mevcut sezon sonlandırılmalı.' });
@@ -17,8 +16,8 @@ export default async function handler(req, res) {
 
   const { error: resetErr } = await admin
     .from('players')
-    .update({ total_points: 0, locked_points: 20, locked_rank: null })
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // tüm satırlar
+    .update({ total_points: 0, locked_points: 0, locked_rank: null, averaj: 0 })
+    .neq('id', '00000000-0000-0000-0000-000000000000');
   if (resetErr) return res.status(500).json({ error: resetErr.message });
 
   const { error: configErr } = await admin

@@ -1,5 +1,5 @@
 import { getSupabaseAdmin, getPlayerFromRequest } from '../../../lib/supabaseAdmin';
-import { calculateMatchPoints } from '../../../lib/points';
+import { calculateMatchPoints, parseMatchScore } from '../../../lib/points';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -31,15 +31,23 @@ export default async function handler(req, res) {
   const { data: loser } = await admin.from('players').select('*').eq('id', loserId).single();
   if (!winner || !loser) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
-  const { winnerPoints, loserPoints } = calculateMatchPoints(winner, loser, 'normal');
+  const { winnerPoints, loserPoints } = calculateMatchPoints('normal');
+  const holeDiff = parseMatchScore(match.result_note);
 
   await admin
     .from('players')
-    .update({ total_points: Number(winner.total_points) + winnerPoints })
+    .update({
+      total_points: Number(winner.total_points) + winnerPoints,
+      averaj: Number(winner.averaj || 0) + holeDiff,
+    })
     .eq('id', winnerId);
+
   await admin
     .from('players')
-    .update({ total_points: Number(loser.total_points) + loserPoints })
+    .update({
+      total_points: Number(loser.total_points) + loserPoints,
+      averaj: Number(loser.averaj || 0) - holeDiff,
+    })
     .eq('id', loserId);
 
   const { error: updateErr } = await admin
@@ -48,10 +56,10 @@ export default async function handler(req, res) {
       status: 'completed',
       result_winner_id: winnerId,
       points_awarded: winnerPoints,
-      power_points_used: loser.locked_points,
+      power_points_used: null,
     })
     .eq('id', matchId);
 
   if (updateErr) return res.status(500).json({ error: updateErr.message });
-  return res.status(200).json({ ok: true, winnerPoints, loserPoints });
+  return res.status(200).json({ ok: true, winnerPoints, loserPoints, holeDiff });
 }

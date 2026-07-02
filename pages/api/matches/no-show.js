@@ -25,21 +25,14 @@ export default async function handler(req, res) {
   }
 
   const winnerId = noShowPlayerId === match.challenger_id ? match.opponent_id : match.challenger_id;
-
   const { data: winner } = await admin.from('players').select('*').eq('id', winnerId).single();
   const { data: loser } = await admin.from('players').select('*').eq('id', noShowPlayerId).single();
   if (!winner || !loser) return res.status(404).json({ error: 'Oyuncu bulunamadı.' });
 
-  const { winnerPoints, loserPoints } = calculateMatchPoints(winner, loser, 'no_show');
+  const { winnerPoints, loserPoints } = calculateMatchPoints('no_show');
 
-  await admin
-    .from('players')
-    .update({ total_points: Number(winner.total_points) + winnerPoints })
-    .eq('id', winnerId);
-  await admin
-    .from('players')
-    .update({ total_points: Number(loser.total_points) + loserPoints })
-    .eq('id', noShowPlayerId);
+  await admin.from('players').update({ total_points: Number(winner.total_points) + winnerPoints }).eq('id', winnerId);
+  await admin.from('players').update({ total_points: Number(loser.total_points) + loserPoints }).eq('id', noShowPlayerId);
 
   const { error: updateErr } = await admin
     .from('matches')
@@ -48,7 +41,6 @@ export default async function handler(req, res) {
       result_winner_id: winnerId,
       result_note: 'Rakip maça gelmedi',
       points_awarded: winnerPoints,
-      power_points_used: loser.locked_points,
     })
     .eq('id', matchId);
 

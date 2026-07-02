@@ -16,9 +16,7 @@ export default function Home() {
   const [config, setConfig] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     const [{ data: players, error: pErr }, { data: matches, error: mErr }, { data: cfg }] =
@@ -28,10 +26,7 @@ export default function Home() {
         supabase.from('league_config').select('*').eq('id', 1).single(),
       ]);
 
-    if (pErr || mErr) {
-      setError('Veriler yüklenemedi. Lütfen sayfayı yenileyin.');
-      return;
-    }
+    if (pErr || mErr) { setError('Veriler yüklenemedi. Lütfen sayfayı yenileyin.'); return; }
 
     const stats = {};
     (players || []).forEach((p) => {
@@ -40,14 +35,8 @@ export default function Home() {
     (matches || []).forEach((m) => {
       const winnerId = m.result_winner_id;
       const loserId = m.challenger_id === winnerId ? m.opponent_id : m.challenger_id;
-      if (stats[winnerId]) {
-        stats[winnerId].played += 1;
-        stats[winnerId].won += 1;
-      }
-      if (stats[loserId]) {
-        stats[loserId].played += 1;
-        stats[loserId].lost += 1;
-      }
+      if (stats[winnerId]) { stats[winnerId].played += 1; stats[winnerId].won += 1; }
+      if (stats[loserId]) { stats[loserId].played += 1; stats[loserId].lost += 1; }
     });
 
     const ranked = Object.values(stats).sort(
@@ -59,67 +48,61 @@ export default function Home() {
 
   return (
     <Layout>
-      <h2 className="font-display text-2xl mb-1">Piramit / Puan Durumu</h2>
+      <h2 className="font-display text-2xl mb-1">Puan Durumu</h2>
       <p className="text-inkSoft text-sm mb-1">
-        Kazanılan maç rakibin o haftaki güç puanı kadar puan getirir. Kaybeden sabit 5 puan alır.
+        Match play — Galibiyet 15 puan, Mağlubiyet 5 puan. Beraberlik yok.
       </p>
       {config?.last_weekly_update && (
         <p className="text-inkSoft text-xs mb-4">
-          Son piramit kilidi:{' '}
-          {new Date(config.last_weekly_update).toLocaleString('tr-TR')}
+          Son güncelleme: {new Date(config.last_weekly_update).toLocaleString('tr-TR')}
         </p>
       )}
-
       {error && <div className="text-flag text-sm mb-4">{error}</div>}
-
       {!rows ? (
         <div className="text-inkSoft text-sm py-10 text-center">Yükleniyor...</div>
       ) : rows.length === 0 ? (
-        <div className="text-inkSoft text-sm py-10 text-center">
-          Henüz oyuncu eklenmedi. Oyuncu Girişi üzerinden kayıt olabilirsiniz.
-        </div>
+        <div className="text-inkSoft text-sm py-10 text-center">Henüz oyuncu eklenmedi.</div>
       ) : (
         <div className="overflow-x-auto -mx-2">
-          <table className="w-full text-sm min-w-[560px]">
+          <table className="w-full text-sm min-w-[520px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-inkSoft border-b border-line">
-                <th className="text-left py-2 px-2"></th>
+                <th className="text-left py-2 px-2 w-8"></th>
                 <th className="text-left py-2 px-2">Oyuncu</th>
-                <th className="text-center py-2 px-2">Toplam Puan</th>
-                <th className="text-center py-2 px-2">Piramit Puanı</th>
+                <th className="text-center py-2 px-2">Puan</th>
                 <th className="text-center py-2 px-2">O</th>
                 <th className="text-center py-2 px-2">G</th>
                 <th className="text-center py-2 px-2">M</th>
+                <th className="text-center py-2 px-2">Averaj</th>
                 <th className="text-center py-2 px-2">HCP</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.id} className="border-b border-line last:border-0">
-                  <td className="font-display text-lg text-inkSoft py-2.5 px-2">{i + 1}</td>
-                  <td className="font-semibold py-2.5 px-2">
-                    {i === 0 && r.played > 0 && <FlagPin />}
-                    {r.full_name}
-                    {!r.is_active && (
-                      <span className="ml-2 text-[10px] bg-tan text-[#7A5A12] px-2 py-0.5 rounded-full">
-                        pasif
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-center font-mono font-semibold text-fairway py-2.5 px-2">
-                    {Number(r.total_points).toFixed(0)}
-                  </td>
-                  <td className="text-center font-mono py-2.5 px-2">
-                    {Number(r.locked_points).toFixed(0)}
-                  </td>
-                  <td className="text-center font-mono py-2.5 px-2">{r.played}</td>
-                  <td className="text-center font-mono py-2.5 px-2">{r.won}</td>
-                  <td className="text-center font-mono py-2.5 px-2">{r.lost}</td>
-                  <td className="text-center font-mono py-2.5 px-2">
-                    {r.handicap ?? '—'}
-                  </td>
-                </tr>
-              ))}
+              {rows.map((r, i) => {
+                const av = Number(r.averaj || 0);
+                return (
+                  <tr key={r.id} className="border-b border-line last:border-0">
+                    <td className="font-display text-lg text-inkSoft py-2.5 px-2">{i + 1}</td>
+                    <td className="font-semibold py-2.5 px-2">
+                      {i === 0 && r.played > 0 && <FlagPin />}
+                      {r.full_name}
+                      {!r.is_active && (
+                        <span className="ml-2 text-[10px] bg-tan text-[#7A5A12] px-2 py-0.5 rounded-full">pasif</span>
+                      )}
+                    </td>
+                    <td className="text-center font-mono font-semibold text-fairway py-2.5 px-2">
+                      {Number(r.total_points).toFixed(0)}
+                    </td>
+                    <td className="text-center font-mono py-2.5 px-2">{r.played}</td>
+                    <td className="text-center font-mono py-2.5 px-2">{r.won}</td>
+                    <td className="text-center font-mono py-2.5 px-2">{r.lost}</td>
+                    <td className={`text-center font-mono font-semibold py-2.5 px-2 ${av > 0 ? 'text-fairway' : av < 0 ? 'text-flag' : 'text-inkSoft'}`}>
+                      {av > 0 ? `+${av}` : av}
+                    </td>
+                    <td className="text-center font-mono py-2.5 px-2">{r.handicap ?? '—'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 
 const TABS = [
-  { href: '/', label: 'Piramit' },
+  { href: '/', label: 'Puan Durumu' },
   { href: '/fikstur', label: 'Fikstür & Sonuçlar' },
   { href: '/arsiv', label: 'Arşiv' },
   { href: '/kurallar', label: 'Kurallar' },

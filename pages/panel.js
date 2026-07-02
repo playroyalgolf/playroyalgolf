@@ -151,7 +151,9 @@ export default function Panel() {
           <h2 className="font-display text-2xl">{me.full_name}</h2>
           <p className="text-inkSoft text-sm">
             Toplam puan: <span className="font-mono font-semibold text-fairway">{me.total_points}</span>
-            {' '}&middot; Güç puanı (bu hafta): <span className="font-mono">{me.locked_points}</span>
+            {' '}&middot; Averaj: <span className={`font-mono font-semibold ${Number(me.averaj||0) > 0 ? 'text-fairway' : Number(me.averaj||0) < 0 ? 'text-flag' : 'text-inkSoft'}`}>
+              {Number(me.averaj||0) > 0 ? `+${me.averaj}` : (me.averaj || 0)}
+            </span>
           </p>
         </div>
         <button
@@ -325,6 +327,7 @@ export default function Panel() {
 function ActiveMatchCard({ match, me, nameById, fmt, call }) {
   const [showReschedule, setShowReschedule] = useState(false);
   const [newDate, setNewDate] = useState('');
+  const [score, setScore] = useState('');
   const opponentId = match.challenger_id === me.id ? match.opponent_id : match.challenger_id;
 
   return (
@@ -333,10 +336,7 @@ function ActiveMatchCard({ match, me, nameById, fmt, call }) {
       <div className="text-inkSoft text-xs mb-3">{fmt(match.scheduled_at)}</div>
 
       {!showReschedule ? (
-        <button
-          onClick={() => setShowReschedule(true)}
-          className="text-fairway underline text-xs font-semibold mb-3 block"
-        >
+        <button onClick={() => setShowReschedule(true)} className="text-fairway underline text-xs font-semibold mb-3 block">
           Tarihi değiştir (en az 24 saat önceden bildirin)
         </button>
       ) : (
@@ -362,16 +362,30 @@ function ActiveMatchCard({ match, me, nameById, fmt, call }) {
         </div>
       )}
 
+      <div className="mb-3">
+        <label className="block text-[11px] uppercase tracking-wide text-inkSoft mb-1">
+          Maç Skoru (örn. 3&amp;2, 1 up, 5 up)
+        </label>
+        <input
+          className="border border-line rounded-lg px-3 py-2 text-sm w-36"
+          placeholder="örn. 3&2"
+          value={score}
+          onChange={(e) => setScore(e.target.value)}
+        />
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         <button
-          onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: me.id })}
-          className="bg-flag text-white rounded-full px-3 py-1.5 text-xs font-semibold"
+          onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: me.id, note: score })}
+          disabled={!score.trim()}
+          className="bg-flag text-white rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
         >
           Ben kazandım (rakibin onayı gerekir)
         </button>
         <button
-          onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: opponentId })}
-          className="border border-line rounded-full px-3 py-1.5 text-xs font-semibold"
+          onClick={() => call('/api/matches/result', { matchId: match.id, winnerId: opponentId, note: score })}
+          disabled={!score.trim()}
+          className="border border-line rounded-full px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
         >
           Rakip kazandı
         </button>
