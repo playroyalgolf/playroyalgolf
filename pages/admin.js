@@ -122,6 +122,34 @@ export default function Admin() {
       </div>
 
       <div className="mb-8">
+        <h3 className="font-display text-lg mb-2 text-fairway">Handikaplar</h3>
+        <div className="border border-line rounded-xl p-4 flex justify-between items-center flex-wrap gap-3">
+          <div className="text-sm text-inkSoft">
+            Tüm oyuncuların handikaplarını federasyon sitesinden şimdi güncelleyin.
+            İşlem birkaç dakika sürer (GitHub Actions üzerinde çalışır).
+          </div>
+          <button
+            onClick={async () => {
+              setBusy(true);
+              setMsg('');
+              const res = await fetch('/api/admin/trigger-handicap-update', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const json = await res.json();
+              setBusy(false);
+              setMsg(res.ok ? '✓ ' + json.message : json.error);
+            }}
+            disabled={busy}
+            className="bg-fairway text-cream rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-60"
+          >
+            Handikapları Şimdi Güncelle
+          </button>
+        </div>
+      </div>
+
+
+      <div className="mb-8">
         <h3 className="font-display text-lg mb-2 text-fairway">
           Onay Bekleyen Oyuncular {pending.length > 0 && `(${pending.length})`}
         </h3>

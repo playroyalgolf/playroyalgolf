@@ -40,7 +40,9 @@ export default function Home() {
     });
 
     const ranked = Object.values(stats).sort(
-      (a, b) => Number(b.total_points) - Number(a.total_points)
+      (a, b) =>
+        Number(b.total_points) - Number(a.total_points) ||
+        Number(b.averaj || 0) - Number(a.averaj || 0)
     );
     setRows(ranked);
     setConfig(cfg);
